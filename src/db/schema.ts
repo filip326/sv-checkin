@@ -22,6 +22,7 @@ export const users = sqliteTable('users', {
 export const usersRelations = relations(users, ({ many }) => ({
   checkins: many(checkins, { relationName: "checkinUser"}),
   checkedIn: many(checkins, { relationName: "checkedInBy"}),
+  tokens: many(tokens, { relationName: "userTokens" }),
 }));
 
 export const checkins = sqliteTable('checkins', {
@@ -49,5 +50,20 @@ export const checkinsRelations = relations(checkins, ({ one }) => ({
     fields: [checkins.checkedInBy],
     references: [users.id],
     relationName: "checkedInBy"
+  }),
+}));
+
+export const tokens = sqliteTable('tokens', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  user: integer('user').notNull().references(() => users.id),
+  token: text('token').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+  expiresAt: text('expires_at').notNull(),
+});
+
+export const tokensRelations = relations(tokens, ({ one }) => ({
+  user: one(users, {
+    fields: [tokens.user],
+    references: [users.id],
   }),
 }));
