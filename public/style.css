@@ -32,3 +32,30 @@ button {
     color: white;
     font-weight: 900;
 }
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: .3em;
+}
+
+form > :is(input, select) {
+    font-size: 1.3rem;
+}
+
+div.add-note-checkbox-wrapper:has(.add-note-checkbox:not(:checked)) + .add-note-textarea {
+    display: none;
+}
+
+.already-checked-in {
+    border: .5em solid rgb(0, 48, 0);
+    background-color: rgb(71, 129, 71);
+    color: white;
+    padding: 1em 3em;
+    border-radius: 0.5em;
+}
+
+.small-checkbox {
+    font-size: .8rem;
+    margin-top: .5em;
+}

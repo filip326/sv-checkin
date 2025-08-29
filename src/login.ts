@@ -6,6 +6,15 @@ import { eq } from "drizzle-orm";
 import { fromISOTimestamp } from "./utils/dates";
 import { randomBytes } from "crypto";
 import { token } from "./utils/token";
+import z from "zod";
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: typeof users.$inferSelect;
+        }
+    }
+}
 
 function createOAuthLoginUri() {
     const redirectUri = process.env.OAUTH_CALLBACK_URI;
@@ -47,7 +56,7 @@ async function exchangeCodeForToken(code: string) {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`
+                Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
             },
             body: new URLSearchParams({
                 grant_type: "authorization_code",
@@ -57,7 +66,6 @@ async function exchangeCodeForToken(code: string) {
                 client_secret: clientSecret,
             }),
         });
-
 
         if (!response.ok) {
             return null;
@@ -70,7 +78,14 @@ async function exchangeCodeForToken(code: string) {
     }
 }
 
-async function getUserInfo(accessToken: string) {
+const expectedUserInfo = z.object({
+    sub: z.string().regex(/^[a-z0-9]{64}$/),
+    name: z.string(),
+    nickname: z.string(),
+    groups: z.array(z.string()).optional(),
+});
+
+async function getUserInfo(accessToken: string): Promise<z.infer<typeof expectedUserInfo> | null> {
     try {
         const userInfoUrl = process.env.OAUTH_USERINFO_URL!;
 
@@ -85,7 +100,8 @@ async function getUserInfo(accessToken: string) {
         }
 
         const data = await response.json();
-        return data || null;
+        const parsed = expectedUserInfo.safeParse(data);
+        return parsed.success ? parsed.data : null;
     } catch {
         return null;
     }
@@ -147,7 +163,6 @@ export default function login() {
             });
             res.redirect(loginUri);
             return;
-
         } catch (err) {
             res.status(500).send("Server Error: Try again later");
         }
@@ -157,6 +172,14 @@ export default function login() {
         const code = req.query.code as string;
         if (!code) {
             res.status(400).send("Missing code");
+            return;
+        }
+
+        // check for state parameter
+        const stateCookie = req.cookies?.oauth_state;
+        const stateParam = req.query.state;
+        if (!stateCookie || !stateParam || stateParam !== stateCookie) {
+            res.status(400).send("Invalid state");
             return;
         }
 
@@ -227,7 +250,7 @@ export default function login() {
                 expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // now + 1 hour
                 token: sessionToken,
             });
-            res.status(200).send(`Login success\n---\nData:\n${JSON.stringify(userInfo, null, 2)}\n\n---`);
+            res.status(200).redirect("/dashboard");
             return;
         } catch (error) {
             console.error(error);
@@ -235,28 +258,37 @@ export default function login() {
         }
     });
 
-    app.get("/dashboard", async (req, res) => {
-        try {
-            const token = req.cookies.token;
-            if (!token) {
-                res.redirect("/login");
-                return;
-            }
-
-            const user = await db.query.users.findFirst({
-                where: eq(users.id, token.userId),
-            });
-
-            if (!user) {
-                res.redirect("/login");
-                return;
-            }
-
-            res.render("dashboard", { user });
-        } catch (error) {
-            console.error(error);
-            res.status(500).send("Authentication failed");
+    app.use(async (req, res, next) => {
+        // check if user is logged in
+        // add user to req object
+        const token = req.cookies.token;
+        if (!token) {
+            next();
+            return;
         }
+
+        const tokenObj = await db.query.tokens.findFirst({
+            where: eq(tokens.token, token),
+            with: {
+                user: true,
+            },
+        });
+
+        if (!tokenObj) {
+            next();
+            return;
+        }
+
+        if (fromISOTimestamp(tokenObj.expiresAt) < new Date()) {
+            res.clearCookie("token");
+            await db.delete(tokens).where(eq(tokens.id, tokenObj.id));
+            next();
+            return;
+        }
+
+        req.user = tokenObj.user;
+        next();
+        return;
     });
 
     return app;

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SV CheckIn</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h1>Hallo <%= user.name %>!</h1>
+
+  <% if (todayCheckedIn != null && todayCheckedIn.checkedIn) { %>
+  <div class="already-checked-in">
+    <h3>Du bist eingecheckt!</h3>
+    <p>Check-In Art: <%= todayCheckedIn.type %></p>
+    <p>Letzter Check-In: heute <%= todayCheckedIn.timestamp %></p>
+  </div>
+  <% } %>
+
+  <h3>Schnell einchecken:</h3>
+  <form action="/checkin" method="post">
+    <p>
+      Mit dem Check-In kannst du deine Anwesenheit an einem SV-Treffen bestätigen.
+      Du kannst auch andere Personen einchecken.
+    </p>
+    <label for="user">Person:</label>
+    <select name="user" id="user">
+      <% for (const user of users) { %>
+      <option value="<%= user.id %>"><%= user.name %></option>
+      <% } %>
+    </select>
+    <label for="type">CheckIn-Art:</label>
+    <select name="type" id="type">
+      <% for (const type of checkinTypes) { %>
+      <option value="<%= type.id %>"><%= type.name %></option>
+      <% } %>
+    </select>
+    <div class="add-note-checkbox-wrapper">
+      <input type="checkbox" name="addNote" id="addNote" class="add-note-checkbox">
+      <label for="addNote">Notiz hinzufügen</label>
+    </div>
+    <textarea name="note" id="note" rows="4" cols="50" class="add-note-textarea" maxlength="500"></textarea>
+    <button type="submit" class="checkin-button">
+      Einchecken
+    </button>
+    <div class="small-checkbox">
+      <input type="checkbox" name="skipMessageToMe" id="skipMessageToMe" class="add-note-checkbox">
+      <label for="skipMessageToMe">
+        Ich möchte keine Benachrichtigung erhalten.
+      </label>
+    </div>
+  </form>
+  <p>
+    Bitte führe die Check-Ins regelmäßig und gewissenhaft durch, sie helfen dir beim Anfertigen
+    deines Rechenschaftsberichts, um deine Tätigkeiten nachzuvollziehen und vollständig darlegen zu können.
+  </p>
+</body>
+
+</html>
