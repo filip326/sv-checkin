@@ -136,7 +136,7 @@ export default function dashboard() {
 
         // send to rocket.chat
         if (process.env.ROCKET_WEBHOOK_URI) {
-            let message = `User @${userExists.username} was checked in to ${typeExists.name}`;
+            let message = `User @${userExists.username} was checked in to ${typeExists.name} at ${format(new Date(), "yyyy-MM-dd HH:mm")}`;
             if (userExists.username !== req.user.username) {
                 message += ` (by ${req.user.commonName})!`;
             } else message += `!`;
@@ -162,9 +162,9 @@ export default function dashboard() {
             ) {
                 let message;
                 if (userExists.username !== req.user.username) {
-                    message = `Du wurdest von @${req.user.username} in ${typeExists.name} eingecheckt.`;
+                    message = `Du wurdest von @${req.user.username} in ${typeExists.name} eingecheckt. Zeitpunkt: ${format(new Date(), "dd.MM.yyyy HH:mm")}`;
                 } else {
-                    message = `Du hast dich in ${typeExists.name} eingecheckt.`;
+                    message = `Du hast dich in ${typeExists.name} eingecheckt. Zeitpunkt: ${format(new Date(), "dd.MM.yyyy HH:mm")}`;
                 }
                 if (data.data.addNote === "on" && data.data.note) {
                     message += `\nNotiz:\n> ${data.data.note.replace(/\n/g, "\n> ")}`;
