@@ -1,6 +1,7 @@
 # SV-CheckIn
 
-SV-CheckIn is a TypeScript Node.js application for managing and tracking activities and attendance of student representatives. It uses Express for the web server, Drizzle ORM with SQLite for data storage, and EJS for templating.
+SV-CheckIn is a TypeScript Node.js application for managing and tracking activities and attendance of student representatives. It should be understood as a helpful tool for student representatives to keep
+track of their own activities and staying organized.
 
 ## Features
 
@@ -9,6 +10,16 @@ SV-CheckIn is a TypeScript Node.js application for managing and tracking activit
 - Notes and notifications via Rocket.Chat webhook
 - Responsive UI with EJS templates
 - SQLite database via Drizzle ORM
+
+## Planned Features
+
+(maybe, if I'll have enough time)
+
+- [ ] Adding and editing checkin-types
+- [ ] Browsing tracked activities
+  - [ ] adding durations,
+  - [ ] editing notes
+- [ ] Migrating to PostgreSQL
 
 ## Project Structure
 
