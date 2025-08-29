@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  sv-checkin:
+    build: .
+    container_name: sv-checkin
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sv-checkin.rule=Host(`sv-checkin.teschnik.de`)"
+      - "traefik.http.routers.sv-checkin.entrypoints=websecure"
+      - "traefik.http.routers.sv-checkin.tls.certresolver=myresolver"
+      - "traefik.http.services.sv-checkin.loadbalancer.server.port=3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      - ./database.sqlite:/app/database.sqlite
+
+networks:
+  sv-internal:
+    external: true
