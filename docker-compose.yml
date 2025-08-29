@@ -21,5 +21,6 @@ services:
       - ./database.sqlite:/app/database.sqlite
 
 networks:
-  sv-internal:
+  traefik:
+    name: ${NETWORK_NAME}
     external: true
